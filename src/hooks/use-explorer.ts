@@ -28,6 +28,19 @@ export const useExplorer = () => {
     return { ...parent, items: newFolders };
   };
 
+  const renameNode = (parent: IFolder, nodeId: number, itemName: string) => {
+    if (nodeId == parent.id) {
+      parent.name = itemName;
+      return parent;
+    }
+
+    const newFolders: IFolder[] = parent.items.map((item) => {
+      return renameNode(item, nodeId, itemName);
+    });
+
+    return { ...parent, items: newFolders };
+  };
+
   const insertNodeInTree = (
     nodeId: number,
     itemName: string,
@@ -37,5 +50,10 @@ export const useExplorer = () => {
     setTreeRoot(updatedTree);
   };
 
-  return { treeRoot, insertNodeInTree };
+  const renameNodeInTree = (nodeId: number, itemName: string) => {
+    const updatedTree = renameNode(treeRoot, nodeId, itemName);
+    setTreeRoot(updatedTree);
+  };
+
+  return { treeRoot, insertNodeInTree, renameNodeInTree };
 };

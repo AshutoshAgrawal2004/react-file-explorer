@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { IFolder } from "../types/folder";
 import Styles from "./folder.module.css";
+import { FolderName } from "./folder-name";
 
 interface FolderProps {
   folder: IFolder;
@@ -9,21 +10,24 @@ interface FolderProps {
     itemName: string,
     isFolder: boolean
   ) => void;
+  renameNodeInTree: (nodeId: number, itemName: string) => void;
 }
 
 export const Folder: React.FC<FolderProps> = ({
-  folder: { id, name, isFolder, items },
+  folder,
   insertNodeInTree,
+  renameNodeInTree,
 }) => {
+  const { id, isFolder, items } = folder;
   const [addingFolder, setAddingFolder] = useState({
     showInput: false,
     isFolder: false,
   });
 
-  const [expand, setExpand] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const toggleExpand = () => {
-    setExpand(!expand);
+  const toggleExpanded = () => {
+    setExpanded(!expanded);
   };
 
   const toggleAddFolder = (
@@ -31,7 +35,7 @@ export const Folder: React.FC<FolderProps> = ({
     isAddingFolder: boolean
   ) => {
     e.stopPropagation();
-    setExpand(true);
+    setExpanded(true);
     setAddingFolder({ showInput: true, isFolder: isAddingFolder });
   };
 
@@ -39,27 +43,29 @@ export const Folder: React.FC<FolderProps> = ({
     const value = e.target.value as string;
 
     if (e.keyCode === 13 && value) {
-      console.log(value);
       insertNodeInTree(id, value, addingFolder.isFolder);
       setAddingFolder({ showInput: false, isFolder: false });
     }
   };
 
-  if (!isFolder) return <div>📄 {name}</div>;
-
   return (
-    <div className="folder">
-      <div className="folder-name" onClick={toggleExpand}>
-        <span>
-          {expand ? "^" : ">"} 📁 {name}
-        </span>
-        <span>
-          <button onClick={(e) => toggleAddFolder(e, true)}>+ 📁</button>
-          <button onClick={(e) => toggleAddFolder(e, false)}>+ 📄</button>
-        </span>
+    <div className={Styles["folder"]}>
+      <div className={Styles["folder-name-container"]} onClick={toggleExpanded}>
+        <FolderName
+          expanded={expanded}
+          folder={folder}
+          renameNodeInTree={renameNodeInTree}
+        />
+        {isFolder && (
+          <div>
+            <button onClick={(e) => toggleAddFolder(e, true)}>+ 📁</button>
+            {"  "}
+            <button onClick={(e) => toggleAddFolder(e, false)}>+ 📄</button>
+          </div>
+        )}
       </div>
 
-      {expand && (
+      {expanded && (
         <div className={Styles["folder-items"]}>
           {addingFolder.showInput && (
             <div>
@@ -77,6 +83,7 @@ export const Folder: React.FC<FolderProps> = ({
               key={item.id}
               folder={item}
               insertNodeInTree={insertNodeInTree}
+              renameNodeInTree={renameNodeInTree}
             />
           ))}
         </div>

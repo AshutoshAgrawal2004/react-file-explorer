@@ -1,3 +1,13 @@
+.folder {
+  margin: 0.25rem 0;
+}
+.folder-name {
+  display: flex;
+}
+.folder-name-container {
+  display: flex;
+  justify-content: space-between;
+}
 .folder-items {
   padding-left: 2rem;
 }
