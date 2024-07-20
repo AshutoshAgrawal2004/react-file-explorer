@@ -41,6 +41,21 @@ export const useExplorer = () => {
     return { ...parent, items: newFolders };
   };
 
+  const deleteNode = (parent: IFolder, parentId: number, nodeId: number) => {
+    if (parent.id == parentId) {
+      return {
+        ...parent,
+        items: parent.items.filter((item) => item.id !== nodeId),
+      };
+    }
+
+    const newFolders: IFolder[] = parent.items.map((item) => {
+      return deleteNode(item, parentId, nodeId);
+    });
+
+    return { ...parent, items: newFolders };
+  };
+
   const insertNodeInTree = (
     nodeId: number,
     itemName: string,
@@ -55,5 +70,10 @@ export const useExplorer = () => {
     setTreeRoot(updatedTree);
   };
 
-  return { treeRoot, insertNodeInTree, renameNodeInTree };
+  const deleteNodeInTree = (parentId: number, nodeId: number) => {
+    const updatedTree = deleteNode(treeRoot, parentId, nodeId);
+    setTreeRoot(updatedTree);
+  };
+
+  return { treeRoot, insertNodeInTree, renameNodeInTree, deleteNodeInTree };
 };

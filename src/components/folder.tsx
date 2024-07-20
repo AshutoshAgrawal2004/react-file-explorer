@@ -4,6 +4,7 @@ import Styles from "./folder.module.css";
 import { FolderName } from "./folder-name";
 
 interface FolderProps {
+  parentId: number;
   folder: IFolder;
   insertNodeInTree: (
     nodeId: number,
@@ -11,12 +12,15 @@ interface FolderProps {
     isFolder: boolean
   ) => void;
   renameNodeInTree: (nodeId: number, itemName: string) => void;
+  deleteNodeInTree: (parentId: number, nodeId: number) => void;
 }
 
 export const Folder: React.FC<FolderProps> = ({
+  parentId,
   folder,
   insertNodeInTree,
   renameNodeInTree,
+  deleteNodeInTree,
 }) => {
   const { id, isFolder, items } = folder;
   const [addingFolder, setAddingFolder] = useState({
@@ -48,6 +52,11 @@ export const Folder: React.FC<FolderProps> = ({
     }
   };
 
+  const onDelete = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    deleteNodeInTree(parentId, id);
+  };
+
   return (
     <div className={Styles["folder"]}>
       <div className={Styles["folder-name-container"]} onClick={toggleExpanded}>
@@ -56,13 +65,18 @@ export const Folder: React.FC<FolderProps> = ({
           folder={folder}
           renameNodeInTree={renameNodeInTree}
         />
-        {isFolder && (
-          <div>
-            <button onClick={(e) => toggleAddFolder(e, true)}>+ 📁</button>
-            {"  "}
-            <button onClick={(e) => toggleAddFolder(e, false)}>+ 📄</button>
-          </div>
-        )}
+
+        <div>
+          {isFolder && (
+            <>
+              <button onClick={(e) => toggleAddFolder(e, true)}>+ 📁</button>
+              {"  "}
+              <button onClick={(e) => toggleAddFolder(e, false)}>+ 📄</button>
+              {"  "}
+            </>
+          )}
+          {parentId != id && <button onClick={onDelete}>🗑️</button>}
+        </div>
       </div>
 
       {expanded && (
@@ -81,9 +95,11 @@ export const Folder: React.FC<FolderProps> = ({
           {items.map((item) => (
             <Folder
               key={item.id}
+              parentId={id}
               folder={item}
               insertNodeInTree={insertNodeInTree}
               renameNodeInTree={renameNodeInTree}
+              deleteNodeInTree={deleteNodeInTree}
             />
           ))}
         </div>
