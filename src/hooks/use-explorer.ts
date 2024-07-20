@@ -5,6 +5,12 @@ import { IFolder } from "../types/folder";
 export const useExplorer = () => {
   const [treeRoot, setTreeRoot] = useState(root);
 
+  const sortItems = (a: IFolder, b: IFolder) => {
+    if (a.isFolder && !b.isFolder) return -1;
+    if (!a.isFolder && b.isFolder) return 1;
+    return a.name.localeCompare(b.name);
+  };
+
   const insertNode = (
     parent: IFolder,
     nodeId: number,
@@ -12,12 +18,14 @@ export const useExplorer = () => {
     isFolder: boolean
   ) => {
     if (nodeId == parent.id && parent.isFolder) {
-      parent.items.unshift({
+      parent.items.push({
         id: new Date().getTime(),
         name: itemName,
         isFolder,
         items: [],
       });
+
+      parent.items.sort(sortItems);
       return parent;
     }
 
@@ -28,17 +36,25 @@ export const useExplorer = () => {
     return { ...parent, items: newFolders };
   };
 
-  const renameNode = (parent: IFolder, nodeId: number, itemName: string) => {
-    if (nodeId == parent.id) {
+  const findAndRenameNode = (
+    parent: IFolder,
+    nodeId: number,
+    itemName: string
+  ) => {
+    if (parent.id === nodeId) {
       parent.name = itemName;
-      return parent;
+      return true;
     }
 
-    const newFolders: IFolder[] = parent.items.map((item) => {
-      return renameNode(item, nodeId, itemName);
-    });
-
-    return { ...parent, items: newFolders };
+    for (let item of parent.items) {
+      if (findAndRenameNode(item, nodeId, itemName)) {
+        if (parent.isFolder) {
+          parent.items.sort(sortItems);
+        }
+        return true;
+      }
+    }
+    return false;
   };
 
   const deleteNode = (parent: IFolder, parentId: number, nodeId: number) => {
@@ -66,8 +82,11 @@ export const useExplorer = () => {
   };
 
   const renameNodeInTree = (nodeId: number, itemName: string) => {
-    const updatedTree = renameNode(treeRoot, nodeId, itemName);
-    setTreeRoot(updatedTree);
+    setTreeRoot((prevTreeRoot) => {
+      const newTreeRoot = { ...prevTreeRoot };
+      findAndRenameNode(newTreeRoot, nodeId, itemName);
+      return newTreeRoot;
+    });
   };
 
   const deleteNodeInTree = (parentId: number, nodeId: number) => {
